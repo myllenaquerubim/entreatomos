@@ -1,55 +1,115 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entre átomos</title>
-    <!-- Importando a fonte Urban Light do Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>Entre Átomos</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: #2d2d2d;
+            color: #fff;
+            width: 20%;
+            padding: 20px;
+            box-sizing: border-box;
+            height: 100vh;
+            position: fixed;
+        }
+
+        .sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar p {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            color: #fff;
+            text-decoration: none;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .sidebar a:hover {
+            text-decoration: underline;
+        }
+
+        /* Main content */
+        .main-content {
+            margin-left: 20%;
+            padding: 20px;
+            box-sizing: border-box;
+            width: 80%;
+        }
+
+        .post {
+            margin-bottom: 40px;
+        }
+
+        .post h2 {
+            font-size: 22px;
+            color: #333;
+        }
+
+        .post p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .post .meta {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .post a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .post a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Entre átomos</h1>
-            <nav>
-                <ul>
-                    <li><a href="#novidades">O que há de novo?</a></li>
-                    <li><a href="#artigos">Artigos</a></li>
-                    <li><a href="#experimentos">Experimentos caseiros</a></li>
-                    <li><a href="#sobre">Sobre mim</a></li>
-                </ul>
-            </nav>
+    <div class="sidebar">
+        <h1>Entre Átomos</h1>
+        <p>Um site sobre ciência e informação</p>
+        <a href="#">Home</a>
+        <a href="#">Artigos</a>
+        <a href="#">Aleatoriedades</a>
+        <a href="#">Sobre mim</a>
+    </div>
+
+    <div class="main-content">
+        <div class="post">
+            <h2>According a funnily until animals</h2>
+            <div class="meta">January 13, 2025 | Music</div>
+            <p>Single shot cultivar beans as chicory caffeine. Medium brewed, milk extra that froth pumpkin spice mocha. Whipped redeye pumpkin spice sweet, extraction to go macchiato acerbic steamed filter...</p>
+            <a href="#">Continue reading &rarr;</a>
         </div>
-    </header>
 
-    <!-- Conteúdo do site -->
-    <main>
-        <section id="novidades">
-            <h2>O que há de novo?</h2>
-            <p>Conteúdo sobre novidades...</p>
-        </section>
-
-        <section id="artigos">
-            <h2>Artigos</h2>
-            <p>Lista de artigos...</p>
-        </section>
-
-        <section id="experimentos">
-            <h2>Experimentos caseiros</h2>
-            <p>Detalhes sobre experimentos...</p>
-        </section>
-
-        <section id="sobre">
-            <h2>Sobre mim</h2>
-            <p>Texto sobre quem você é...</p>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Entre átomos. Todos os direitos reservados.</p>
-    </footer>
-
-    <script src="script.js"></script>
+        <div class="post">
+            <h2>Overlaid the jeepers uselessly twice</h2>
+            <div class="meta">January 13, 2025 | Tech</div>
+            <p>Saucer dark cup french press. Barista beans, organic eu variety skinny acerbic flavour caffeine white. Steamed, plunger pot ut dripper decaffeinated...</p>
+            <a href="#">Continue reading &rarr;</a>
+        </div>
+    </div>
 </body>
 </html>
+
