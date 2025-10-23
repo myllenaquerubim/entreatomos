@@ -7,8 +7,8 @@
 <style>
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f7f7f7;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to bottom, #c6ffdd, #fbd786, #f7797d);
     overflow: hidden;
 }
 .game-container {
@@ -55,45 +55,85 @@ body {
     right: 20px;
     font-size: 20px;
     font-weight: bold;
+    color: #333;
+}
+.start-screen {
+    position: absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+}
+.start-screen h1 {
+    color: #fff;
+    font-size: 48px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 6px #000;
+}
+.start-screen button {
+    padding: 15px 40px;
+    font-size: 24px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.start-screen button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
 }
 .question-modal {
     position: fixed;
     top:0; left:0;
     width:100%; height:100%;
-    background: rgba(0,0,0,0.8);
-    display:none;
+    background: rgba(0,0,0,0.85);
+    display:flex;
     justify-content:center;
     align-items:center;
     z-index:1000;
 }
 .question-content {
-    background:#667eea;
+    background: linear-gradient(to right, #667eea, #764ba2);
     color:white;
-    padding:30px;
-    border-radius:15px;
-    max-width:500px;
+    padding:40px;
+    border-radius:20px;
+    max-width:600px;
     width:90%;
     text-align:center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    border: 3px solid rgba(255,255,255,0.2);
 }
 .option {
     display:block;
-    margin:10px 0;
-    padding:10px;
-    background:#4facfe;
+    margin:15px 0;
+    padding:15px;
+    background: linear-gradient(to right, #4facfe, #00f2fe);
     border:none;
-    border-radius:8px;
+    border-radius:12px;
     cursor:pointer;
+    font-size:18px;
+    font-weight:bold;
+    transition: all 0.3s;
 }
-.option.correct { background:#56ab2f; }
-.option.incorrect { background:#ff4757; }
+.option:hover { transform: translateY(-2px); }
+.option.correct { background: linear-gradient(to right, #56ab2f, #a8e6cf); }
+.option.incorrect { background: linear-gradient(to right, #ff416c, #ff4757); }
 .continue-btn {
     display:none;
-    margin-top:15px;
-    padding:10px 20px;
-    background:#f093fb;
+    margin-top:20px;
+    padding:12px 30px;
+    background: linear-gradient(to right, #f093fb, #f5576c);
     border:none;
-    border-radius:8px;
+    border-radius:12px;
     cursor:pointer;
+    font-size:18px;
+    font-weight:bold;
 }
 </style>
 </head>
@@ -105,6 +145,11 @@ body {
         <div class="ground"></div>
         <div class="dino" id="dino"></div>
     </div>
+</div>
+
+<div class="start-screen" id="startScreen">
+    <h1>🤖 Dino Óptica 🔬</h1>
+    <button onclick="initGame()">Iniciar Jogo</button>
 </div>
 
 <div class="question-modal" id="questionModal">
@@ -125,7 +170,7 @@ let jumping = false;
 let ducking = false;
 let scoreInterval;
 let obstacleInterval;
-let gameRunning = true;
+let gameRunning = false;
 
 const questions = [
 {question:"Qual tipo de reflexão ocorre em uma superfície lisa como um espelho?",options:["Reflexão difusa","Reflexão especular","Reflexão total","Reflexão parcial"],correct:1},
@@ -135,16 +180,22 @@ const questions = [
 {question:"Um espelho convexo forma imagens:",options:["Sempre reais e invertidas","Sempre virtuais e reduzidas","Sempre reais e ampliadas","Nunca forma imagens"],correct:1}
 ];
 
+function initGame(){
+    document.getElementById('startScreen').style.display='none';
+    startGame();
+}
+
 function startGame(){
     score = 0;
     gameSpeed = 5;
     obstacles.forEach(o => o.remove());
     obstacles = [];
     gameRunning = true;
-    scoreInterval = setInterval(() => {
+    document.getElementById('score').textContent = score;
+    scoreInterval = setInterval(()=>{
         score++;
         document.getElementById('score').textContent = score;
-        if(score%100===0) gameSpeed += 0.5;
+        if(score % 100 === 0) gameSpeed += 0.5;
     },100);
     obstacleInterval = setInterval(spawnObstacle,1500);
     requestAnimationFrame(gameLoop);
@@ -179,21 +230,21 @@ function gameLoop(){
 }
 
 function collision(a,b){
-    const rect1 = a.getBoundingClientRect();
-    const rect2 = b.getBoundingClientRect();
-    return !(rect1.top>rect2.bottom || rect1.bottom<rect2.top || rect1.right<rect2.left || rect1.left>rect2.right);
+    const r1 = a.getBoundingClientRect();
+    const r2 = b.getBoundingClientRect();
+    return !(r1.top>r2.bottom || r1.bottom<r2.top || r1.right<r2.left || r1.left>r2.right);
 }
 
 function jump(){
-    if(jumping) return;
-    jumping = true;
+    if(jumping || !gameRunning) return;
+    jumping=true;
     dino.classList.add('jumping');
     setTimeout(()=>{ dino.classList.remove('jumping'); jumping=false; },400);
 }
 
 function duck(){
-    if(ducking) return;
-    ducking = true;
+    if(ducking || !gameRunning) return;
+    ducking=true;
     dino.classList.add('ducking');
     setTimeout(()=>{ dino.classList.remove('ducking'); ducking=false; },400);
 }
@@ -214,7 +265,7 @@ function resumeGame(){
     scoreInterval = setInterval(()=>{
         score++;
         document.getElementById('score').textContent = score;
-        if(score%100===0) gameSpeed += 0.5;
+        if(score % 100 === 0) gameSpeed += 0.5;
     },100);
     obstacleInterval = setInterval(spawnObstacle,1500);
     requestAnimationFrame(gameLoop);
@@ -224,12 +275,12 @@ function showQuestion(){
     const q = questions[Math.floor(Math.random()*questions.length)];
     document.getElementById('questionText').textContent = q.question;
     const optionsDiv = document.getElementById('options');
-    optionsDiv.innerHTML = '';
+    optionsDiv.innerHTML='';
     q.options.forEach((opt,i)=>{
         const btn = document.createElement('button');
-        btn.className = 'option';
-        btn.textContent = opt;
-        btn.onclick = ()=> selectAnswer(i,q.correct);
+        btn.className='option';
+        btn.textContent=opt;
+        btn.onclick=()=> selectAnswer(i,q.correct);
         optionsDiv.appendChild(btn);
     });
     document.getElementById('questionModal').style.display='flex';
@@ -246,17 +297,17 @@ function selectAnswer(selected,correct){
         score += 50;
         const btnContinue = document.getElementById('continueBtn');
         btnContinue.style.display='block';
-        btnContinue.onclick = () => {
+        btnContinue.onclick = ()=>{
             document.getElementById('questionModal').style.display='none';
             btnContinue.style.display='none';
             resumeGame();
         }
     } else {
-        alert("Resposta incorreta! Tente novamente para continuar.");
+        alert("Resposta incorreta! O jogo reiniciará.");
+        document.getElementById('questionModal').style.display='none';
+        startGame(); // reinicia o jogo
     }
 }
-
-startGame();
 </script>
 
 </body>
