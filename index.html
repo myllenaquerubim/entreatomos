@@ -92,3 +92,176 @@ body {
         <button class="restart-btn" onclick="restartGame()">Jogar Novamente</button>
     </div>
 </div>
+
+<script>
+/* --- JAVASCRIPT --- */
+let gameRunning = false;
+let score = 0;
+let correctAnswers = 0;
+let dino = document.getElementById('dino');
+let gameArea = document.querySelector('.game-area');
+let isJumping = false;
+let obstacleInterval;
+let gameSpeed = 2500;
+let currentLane = 1;
+let lanes = [16.66,50,83.33];
+
+const questions = [
+    { question: "Qual tipo de reflexão ocorre em uma superfície lisa como um espelho?", options:["Reflexão difusa","Reflexão especular","Reflexão total","Reflexão parcial"], correct:1 },
+    { question: "Em um espelho plano, a imagem formada é:", options:["Real e invertida","Virtual e do mesmo tamanho","Real e ampliada","Virtual e reduzida"], correct:1 },
+    { question: "Qual é a principal característica da reflexão difusa?", options:["Ocorre apenas em espelhos","A luz é espalhada em várias direções","Forma imagens nítidas","Só acontece com luz laser"], correct:1 },
+    { question: "Em um espelho côncavo, quando o objeto está no foco:", options:["A imagem é virtual","A imagem é real e invertida","Os raios emergem paralelos","Não se forma imagem"], correct:2 },
+    { question: "A distância focal de um espelho esférico é:", options:["Igual ao raio de curvatura","Metade do raio de curvatura","Duas vezes o raio","Independente do raio"], correct:1 },
+    { question: "Em um espelho convexo, as imagens são sempre:", options:["Reais e ampliadas","Virtuais e reduzidas","Reais e reduzidas","Virtuais e ampliadas"], correct:1 },
+    { question: "O que acontece quando a luz incide perpendicularmente em um espelho?", options:["É totalmente absorvida","Reflete no mesmo ângulo","É refratada","Volta na mesma direção"], correct:3 },
+    { question: "Qual espelho é usado em retrovisores de carros?", options:["Espelho plano","Espelho côncavo","Espelho convexo","Espelho cilíndrico"], correct:2 }
+];
+
+function startGame(){
+    document.getElementById('instructions').style.display='none';
+    gameRunning=true;
+    score=0;
+    correctAnswers=0;
+    updateScore();
+    createObstacles();
+}
+
+function createObstacles(){
+    if(!gameRunning) return;
+    const obstacle = document.createElement('div');
+    obstacle.className='obstacle';
+    obstacle.style.right='-80px';
+    const randomLane=Math.floor(Math.random()*3);
+    obstacle.style.left=lanes[randomLane]+'%';
+    obstacle.style.transform='translateX(-50%)';
+    obstacle.dataset.lane=randomLane;
+    gameArea.appendChild(obstacle);
+
+    const checkCollision=setInterval(()=>{
+        const dinoRect=dino.getBoundingClientRect();
+        const obstacleRect=obstacle.getBoundingClientRect();
+        const obstacleLane=parseInt(obstacle.dataset.lane);
+        if(currentLane===obstacleLane &&
+           obstacleRect.right>dinoRect.left &&
+           obstacleRect.left<dinoRect.right &&
+           obstacleRect.bottom>dinoRect.top &&
+           obstacleRect.top<dinoRect.bottom){
+               clearInterval(checkCollision);
+               obstacle.remove();
+               showQuestion();
+               return;
+           }
+        if(obstacleRect.right<0){
+            clearInterval(checkCollision);
+            obstacle.remove();
+            score+=10;
+            updateScore();
+        }
+    },10);
+
+    obstacleInterval=setTimeout(()=>{ createObstacles(); }, gameSpeed);
+    if(gameSpeed>1200) gameSpeed-=50;
+}
+
+function jump(){
+    if(isJumping||!gameRunning) return;
+    isJumping=true;
+    dino.classList.add('jumping');
+    setTimeout(()=>{
+        dino.classList.remove('jumping');
+        isJumping=false;
+    },800);
+}
+
+function moveLeft(){ if(!gameRunning||currentLane<=0) return; currentLane--; dino.style.left=lanes[currentLane]+'%'; }
+function moveRight(){ if(!gameRunning||currentLane>=2) return; currentLane++; dino.style.left=lanes[currentLane]+'%'; }
+
+function showQuestion(){
+    gameRunning=false;
+    clearTimeout(obstacleInterval);
+    const randomQuestion=questions[Math.floor(Math.random()*questions.length)];
+    document.getElementById('questionText').textContent=randomQuestion.question;
+    const optionsContainer=document.getElementById('options');
+    optionsContainer.innerHTML='';
+    randomQuestion.options.forEach((option,index)=>{
+        const button=document.createElement('button');
+        button.className='option';
+        button.textContent=option;
+        button.onclick=()=>selectAnswer(index,randomQuestion.correct);
+        optionsContainer.appendChild(button);
+    });
+    document.getElementById('questionModal').style.display='flex';
+}
+
+function selectAnswer(selected, correct){
+    const options=document.querySelectorAll('.option');
+    options.forEach((option,index)=>{
+        option.disabled=true;
+        if(index===correct) option.classList.add('correct');
+        else if(index===selected) option.classList.add('incorrect');
+    });
+    if(selected===correct){ correctAnswers++; score+=50; }
+    else score=Math.max(0,score-20);
+    updateScore();
+    document.getElementById('continueBtn').style.display='inline-block';
+}
+
+function continueGame(){
+    document.getElementById('questionModal').style.display='none';
+    document.getElementById('continueBtn').style.display='none';
+    gameRunning=true;
+    createObstacles();
+}
+
+function updateScore(){
+    document.getElementById('score').textContent=score;
+    document.getElementById('correct-answers').textContent=correctAnswers;
+}
+
+function gameOver(){
+    gameRunning=false;
+    clearTimeout(obstacleInterval);
+    document.getElementById('finalScore').textContent=score;
+    document.getElementById('finalCorrect').textContent=correctAnswers;
+    document.getElementById('gameOver').style.display='flex';
+}
+
+function restartGame(){
+    document.getElementById('gameOver').style.display='none';
+    document.getElementById('questionModal').style.display='none';
+    const obstacles=document.querySelectorAll('.obstacle');
+    obstacles.forEach(obstacle=>obstacle.remove());
+    currentLane=1;
+    dino.style.left=lanes[currentLane]+'%';
+    gameSpeed=2500;
+    startGame();
+}
+
+document.addEventListener('keydown',(e)=>{
+    switch(e.code){
+        case 'Space':
+        case 'ArrowUp': jump(); break;
+        case 'ArrowLeft':
+        case 'KeyA': moveLeft(); break;
+        case 'ArrowRight':
+        case 'KeyD': moveRight(); break;
+    }
+});
+
+let touchStartX=0,touchStartY=0;
+document.addEventListener('touchstart',(e)=>{ touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY; });
+document.addEventListener('touchend',(e)=>{
+    const touchEndX=e.changedTouches[0].clientX;
+    const touchEndY=e.changedTouches[0].clientY;
+    const deltaX=touchEndX-touchStartX;
+    const deltaY=touchEndY-touchStartY;
+    if(Math.abs(deltaX)>Math.abs(deltaY)){
+        if(deltaX>50) moveRight();
+        else if(deltaX<-50) moveLeft();
+    }else{
+        if(deltaY<-50) jump();
+    }
+});
+</script>
+</body>
+</html>
