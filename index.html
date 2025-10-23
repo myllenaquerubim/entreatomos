@@ -1,236 +1,58 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dino Óptica - Estilo Chrome</title>
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f7f7f7;
-    overflow: hidden;
-}
-.game-container {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-}
-.game-area {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.ground {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 100px;
-    background: #555;
-}
-.dino {
-    position: absolute;
-    bottom: 100px;
-    left: 50px;
-    width: 50px;
-    height: 50px;
-    background: #4caf50;
-    border-radius: 8px;
-    transition: bottom 0.2s, height 0.2s;
-}
-.dino.jumping {
-    bottom: 200px;
-}
-.dino.ducking {
-    height: 25px;
-}
-.obstacle {
-    position: absolute;
-    bottom: 100px;
-    width: 25px;
-    height: 50px;
-    background: #f44336;
-    border-radius: 4px;
-}
-.score-board {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 20px;
-    font-weight: bold;
-}
-.question-modal {
-    position: fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background: rgba(0,0,0,0.8);
-    display:none;
-    justify-content:center;
-    align-items:center;
-    z-index:1000;
-}
-.question-content {
-    background:#667eea;
-    color:white;
-    padding:30px;
-    border-radius:15px;
-    max-width:500px;
-    width:90%;
-    text-align:center;
-}
-.option {
-    display:block;
-    margin:10px 0;
-    padding:10px;
-    background:#4facfe;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-}
-.option.correct { background:#56ab2f; }
-.option.incorrect { background:#ff4757; }
-.continue-btn {
-    display:none;
-    margin-top:15px;
-    padding:10px 20px;
-    background:#f093fb;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-}
-</style>
-</head>
-<body>
-
-<div class="game-container">
-    <div class="score-board">Pontuação: <span id="score">0</span></div>
-    <div class="game-area">
-        <div class="ground"></div>
-        <div class="dino" id="dino"></div>
-    </div>
-</div>
-
-<div class="question-modal" id="questionModal">
-    <div class="question-content">
-        <div id="questionText"></div>
-        <div id="options"></div>
-        <button class="continue-btn" id="continueBtn" onclick="closeQuestion()">Continuar</button>
-    </div>
-</div>
-
-<script>
-let dino=document.getElementById('dino');
-let gameArea=document.querySelector('.game-area');
-let score=0;
-let gameSpeed=5;
-let obstacles=[];
-let jumping=false;
-let ducking=false;
-let scoreInterval;
-let obstacleInterval;
-
-const questions=[
-{question:"Qual tipo de reflexão ocorre em uma superfície lisa como um espelho?",options:["Reflexão difusa","Reflexão especular","Reflexão total","Reflexão parcial"],correct:1},
-{question:"Em um espelho plano, a imagem formada é:",options:["Real e invertida","Virtual e do mesmo tamanho","Real e ampliada","Virtual e reduzida"],correct:1},
-{question:"Qual é a principal característica da reflexão difusa?",options:["Ocorre apenas em espelhos","A luz é espalhada em várias direções","Forma imagens nítidas","Só acontece com luz laser"],correct:1},
-{question:"O que é ponto focal?",options:["O ponto onde a luz se dispersa","O ponto onde os raios convergem","O ponto de reflexão difusa","O ponto mais distante do espelho"],correct:1},
-{question:"Um espelho convexo forma imagens:",options:["Sempre reais e invertidas","Sempre virtuais e reduzidas","Sempre reais e ampliadas","Nunca forma imagens"],correct:1}
-];
-
-function startGame(){
-    score=0;
-    gameSpeed=5;
-    obstacles.forEach(o=>o.remove());
-    obstacles=[];
-    scoreInterval=setInterval(()=>{score++;document.getElementById('score').textContent=score; if(score%100===0) gameSpeed+=0.5;},100);
-    obstacleInterval=setInterval(spawnObstacle,1500);
-    requestAnimationFrame(gameLoop);
-}
-
-function spawnObstacle(){
-    const obs=document.createElement('div');
-    obs.className='obstacle';
-    obs.style.right='0px';
-    obs.style.left=gameArea.offsetWidth+'px';
-    gameArea.appendChild(obs);
-    obstacles.push(obs);
-}
+let gameRunning = true; // novo flag para controlar o loop
 
 function gameLoop(){
+    if(!gameRunning) return; // pausa total se colidiu
     obstacles.forEach((obs,index)=>{
         let pos=parseInt(obs.style.left);
         pos-=gameSpeed;
-        obs.style.left=pos+'px';
-        if(pos+obs.offsetWidth<0){obs.remove(); obstacles.splice(index,1);}
-        if(collision(dino,obs)){showQuestion(); obs.remove(); obstacles.splice(index,1);}
+        obs.style.left = pos + 'px';
+        if(pos+obs.offsetWidth<0){
+            obs.remove();
+            obstacles.splice(index,1);
+        }
+        if(collision(dino,obs)){
+            pauseGame();       // pausa o jogo
+            showQuestion(obs); // mostra pergunta
+        }
     });
     requestAnimationFrame(gameLoop);
 }
 
-function collision(a,b){
-    const rect1=a.getBoundingClientRect();
-    const rect2=b.getBoundingClientRect();
-    return !(rect1.top>rect2.bottom || rect1.bottom<rect2.top || rect1.right<rect2.left || rect1.left>rect2.right);
-}
-
-function jump(){
-    if(jumping) return;
-    jumping=true;
-    dino.classList.add('jumping');
-    setTimeout(()=>{dino.classList.remove('jumping'); jumping=false;},400);
-}
-
-function duck(){
-    if(ducking) return;
-    ducking=true;
-    dino.classList.add('ducking');
-    setTimeout(()=>{dino.classList.remove('ducking'); ducking=false;},400);
-}
-
-document.addEventListener('keydown',e=>{
-    if(e.code==='Space'||e.code==='ArrowUp') jump();
-    if(e.code==='ArrowDown') duck();
-});
-
-// Perguntas
-function showQuestion(){
+function pauseGame(){
+    gameRunning = false;
     clearInterval(scoreInterval);
     clearInterval(obstacleInterval);
-    const q=questions[Math.floor(Math.random()*questions.length)];
-    document.getElementById('questionText').textContent=q.question;
-    const optionsDiv=document.getElementById('options');
-    optionsDiv.innerHTML='';
-    q.options.forEach((opt,i)=>{
-        const btn=document.createElement('button');
-        btn.className='option';
-        btn.textContent=opt;
-        btn.onclick=()=>selectAnswer(i,q.correct);
-        optionsDiv.appendChild(btn);
-    });
-    document.getElementById('questionModal').style.display='flex';
 }
 
-function selectAnswer(selected,correct){
-    const buttons=document.querySelectorAll('.option');
+function resumeGame(){
+    gameRunning = true;
+    scoreInterval = setInterval(()=>{
+        score++;
+        document.getElementById('score').textContent = score;
+        if(score%100===0) gameSpeed += 0.5;
+    },100);
+    obstacleInterval = setInterval(spawnObstacle,1500);
+    requestAnimationFrame(gameLoop);
+}
+
+function selectAnswer(selected, correct){
+    const buttons = document.querySelectorAll('.option');
     buttons.forEach((b,i)=>{
-        b.disabled=true;
-        if(i===correct) b.classList.add('correct');
-        else if(i===selected) b.classList.add('incorrect');
+        b.disabled = true;
+        if(i === correct) b.classList.add('correct');
+        else if(i === selected) b.classList.add('incorrect');
     });
-    document.getElementById('continueBtn').style.display='block';
-    if(selected===correct) score+=50;
+
+    if(selected === correct){
+        score += 50;
+        document.getElementById('continueBtn').style.display = 'block';
+        document.getElementById('continueBtn').onclick = () => {
+            document.getElementById('questionModal').style.display = 'none';
+            document.getElementById('continueBtn').style.display = 'none';
+            resumeGame(); // retoma o jogo somente quando acertar
+        }
+    } else {
+        // se errou, não libera o jogo, pode mostrar mensagem "Tente novamente"
+        alert("Resposta incorreta! Tente novamente para continuar.");
+    }
 }
-
-function closeQuestion(){
-    document.getElementById('questionModal').style.display='none';
-    document.getElementById('continueBtn').style.display='none';
-    scoreInterval=setInterval(()=>{score++;document.getElementById('score').textContent=score; if(score%100===0) gameSpeed+=0.5;},100);
-    obstacleInterval=setInterval(spawnObstacle,1500);
-}
-
-startGame();
-</script>
-
-</body>
-</html>
