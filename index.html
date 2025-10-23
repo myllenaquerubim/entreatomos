@@ -1,502 +1,94 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dino Óptica - Jogo Educativo</title>
-    <style>
-        body {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
-            height: 100%;
-        }
-
-        .game-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .score-board {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 15px;
-            font-weight: bold;
-            z-index: 100;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            border: 2px solid rgba(255,255,255,0.2);
-        }
-
-        .game-area {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .ground {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 100px;
-            background: linear-gradient(180deg, #2d5016 0%, #3e6b1f 100%);
-            border-top: 4px solid #4a7c23;
-        }
-
-        .ground::before {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 0;
-            width: 100%;
-            height: 20px;
-            background: repeating-linear-gradient(
-                90deg,
-                #4a7c23 0px,
-                #4a7c23 20px,
-                #5a8c33 20px,
-                #5a8c33 40px
-            );
-        }
-
-        .lane-divider {
-            position: absolute;
-            bottom: 100px;
-            width: 4px;
-            height: 200px;
-            background: #ffffff;
-            opacity: 0.6;
-        }
-
-        .lane-divider:nth-child(2) {
-            left: 33.33%;
-        }
-
-        .lane-divider:nth-child(3) {
-            left: 66.66%;
-        }
-
-        .dino {
-            position: absolute;
-            bottom: 100px;
-            left: 50%;
-            width: 70px;
-            height: 80px;
-            background: #4facfe;
-            border: 4px solid #0066cc;
-            border-radius: 20px;
-            transition: left 0.3s ease, bottom 0.4s ease;
-            z-index: 10;
-            transform: translateX(-50%);
-        }
-
-        .dino::before {
-            content: '';
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            width: 40px;
-            height: 25px;
-            background: #ff9a9e;
-            border: 2px solid #ff6b9d;
-            border-radius: 15px;
-        }
-
-        .dino::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 8px;
-            height: 8px;
-            background: #333;
-            border-radius: 50%;
-        }
-
-        .dino.jumping {
-            bottom: 250px;
-        }
-
-        .obstacle {
-            position: absolute;
-            bottom: 100px;
-            width: 60px;
-            height: 90px;
-            background: #ff6b6b;
-            border: 4px solid #c44569;
-            border-radius: 10px;
-            animation: moveLeft 2.5s linear infinite;
-        }
-
-        .obstacle::before {
-            content: '';
-            position: absolute;
-            top: 15px;
-            left: 12px;
-            width: 35px;
-            height: 35px;
-            background: #feca57;
-            border: 3px solid #ff6348;
-            border-radius: 50%;
-            animation: spin 1.5s linear infinite;
-        }
-
-        .obstacle::after {
-            content: '';
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 40px;
-            height: 20px;
-            background: #54a0ff;
-            border: 2px solid #0abde3;
-            border-radius: 10px;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes moveLeft {
-            from { right: -80px; }
-            to { right: 100%; }
-        }
-
-        .question-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .question-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 700px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            border: 3px solid rgba(255,255,255,0.2);
-        }
-
-        .question-title {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 25px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .question-text {
-            font-size: 20px;
-            margin-bottom: 30px;
-            line-height: 1.6;
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .options {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .option {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            border: 3px solid rgba(255,255,255,0.3);
-            padding: 18px 25px;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .option:hover {
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
-
-        .option.correct {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            border-color: #27ae60;
-        }
-
-        .option.incorrect {
-            background: linear-gradient(135deg, #ff416c 0%, #ff4757 100%);
-            border-color: #e74c3c;
-        }
-
-        .continue-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            border: none;
-            padding: 18px 35px;
-            border-radius: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            display: none;
-            margin-top: 20px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
-
-        .continue-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.4);
-        }
-
-        .instructions {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            z-index: 50;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border: 3px solid rgba(255,255,255,0.2);
-            max-width: 500px;
-        }
-
-        .instructions h2 {
-            font-size: 32px;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .instructions p {
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-
-        .start-btn {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            color: white;
-            border: none;
-            padding: 18px 35px;
-            border-radius: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 25px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
-
-        .start-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.4);
-        }
-
-        .game-over {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .game-over-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 50px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 450px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border: 3px solid rgba(255,255,255,0.2);
-        }
-
-        .restart-btn {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            color: white;
-            border: none;
-            padding: 18px 35px;
-            border-radius: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 25px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
-
-        .restart-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.4);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino Óptica - Jogo Educativo</title>
+<style>
+/* --- ESTILOS --- */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    overflow: hidden;
+    height: 100vh;
+}
+.game-container { width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; }
+.score-board { position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 25px; border-radius: 15px; font-weight: bold; z-index: 100; box-shadow: 0 8px 16px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.2); }
+.game-area { flex: 1; position: relative; overflow: hidden; }
+.ground { position: absolute; bottom: 0; width: 100%; height: 100px; background: linear-gradient(180deg, #2d5016 0%, #3e6b1f 100%); border-top: 4px solid #4a7c23; }
+.ground::before { content: ''; position: absolute; top: -10px; left: 0; width: 100%; height: 20px; background: repeating-linear-gradient(90deg, #4a7c23 0px, #4a7c23 20px, #5a8c33 20px, #5a8c33 40px); }
+.lane-divider { position: absolute; bottom: 100px; width: 4px; height: 200px; background: #ffffff; opacity: 0.6; }
+.lane-divider:nth-child(2) { left: 33.33%; }
+.lane-divider:nth-child(3) { left: 66.66%; }
+.dino { position: absolute; bottom: 100px; left: 50%; width: 70px; height: 80px; background: #4facfe; border: 4px solid #0066cc; border-radius: 20px; transition: left 0.3s ease, bottom 0.4s ease; z-index: 10; transform: translateX(-50%); }
+.dino::before { content: ''; position: absolute; top: 15px; left: 15px; width: 40px; height: 25px; background: #ff9a9e; border: 2px solid #ff6b9d; border-radius: 15px; }
+.dino::after { content: ''; position: absolute; top: 20px; left: 20px; width: 8px; height: 8px; background: #333; border-radius: 50%; }
+.dino.jumping { bottom: 250px; }
+.obstacle { position: absolute; bottom: 100px; width: 60px; height: 90px; background: #ff6b6b; border: 4px solid #c44569; border-radius: 10px; }
+.obstacle::before { content: ''; position: absolute; top: 15px; left: 12px; width: 35px; height: 35px; background: #feca57; border: 3px solid #ff6348; border-radius: 50%; animation: spin 1.5s linear infinite; }
+.obstacle::after { content: ''; position: absolute; bottom: 10px; left: 10px; width: 40px; height: 20px; background: #54a0ff; border: 2px solid #0abde3; border-radius: 10px; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.question-modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+.question-content { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 20px; max-width: 700px; width: 90%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); }
+.question-title { font-size: 28px; font-weight: bold; margin-bottom: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+.question-text { font-size: 20px; margin-bottom: 30px; line-height: 1.6; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; }
+.options { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+.option { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: 3px solid rgba(255,255,255,0.3); padding: 18px 25px; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+.option:hover { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+.option.correct { background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); border-color: #27ae60; }
+.option.incorrect { background: linear-gradient(135deg, #ff416c 0%, #ff4757 100%); border-color: #e74c3c; }
+.continue-btn { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 18px 35px; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; display: none; margin-top: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+.continue-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(0,0,0,0.4); }
+.instructions { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 20px; text-align: center; z-index: 50; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); max-width: 500px; }
+.start-btn { background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); color:white; border:none; padding:18px 35px; border-radius:15px; font-size:20px; font-weight:bold; cursor:pointer; margin-top:25px; box-shadow:0 8px 16px rgba(0,0,0,0.3); }
+.start-btn:hover { transform: translateY(-2px); box-shadow:0 12px 20px rgba(0,0,0,0.4); }
+.game-over { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:1000; }
+.game-over-content { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:50px; border-radius:20px; text-align:center; max-width:450px; box-shadow:0 20px 40px rgba(0,0,0,0.5); border:3px solid rgba(255,255,255,0.2); }
+.restart-btn { background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); color:white; border:none; padding:18px 35px; border-radius:15px; font-size:20px; font-weight:bold; cursor:pointer; margin-top:25px; box-shadow:0 8px 16px rgba(0,0,0,0.3); }
+.restart-btn:hover { transform: translateY(-2px); box-shadow:0 12px 20px rgba(0,0,0,0.4); }
+</style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="score-board">
-            <div>Pontuação: <span id="score">0</span></div>
-            <div>Acertos: <span id="correct-answers">0</span></div>
-        </div>
 
-        <div class="instructions" id="instructions">
-            <h2>🤖 Dino Óptica 🔬</h2>
-            <p>Use <strong>A/D</strong> ou <strong>←/→</strong> para mover entre pistas</p>
-            <p>Pressione <strong>ESPAÇO</strong> ou <strong>↑</strong> para pular obstáculos!</p>
-            <p>Quando colidir, responda perguntas sobre óptica geométrica para continuar.</p>
-            <p><strong>Temas:</strong> Reflexão, Espelhos Planos e Esféricos</p>
-            <button class="start-btn" onclick="startGame()">Começar Jogo</button>
-        </div>
-
-        <div class="game-area">
-            <div class="lane-divider"></div>
-            <div class="lane-divider"></div>
-            <div class="lane-divider"></div>
-            <div class="dino" id="dino"></div>
-            <div class="ground"></div>
-        </div>
+<div class="game-container">
+    <div class="score-board">
+        <div>Pontuação: <span id="score">0</span></div>
+        <div>Acertos: <span id="correct-answers">0</span></div>
     </div>
 
-    <div class="question-modal" id="questionModal">
-        <div class="question-content">
-            <div class="question-title">🔬 Pergunta de Óptica Geométrica</div>
-            <div class="question-text" id="questionText"></div>
-            <div class="options" id="options"></div>
-            <button class="continue-btn" id="continueBtn" onclick="continueGame()">Continuar Jogo</button>
-        </div>
+    <div class="instructions" id="instructions">
+        <h2>🤖 Dino Óptica 🔬</h2>
+        <p>Use <strong>A/D</strong> ou <strong>←/→</strong> para mover entre pistas</p>
+        <p>Pressione <strong>ESPAÇO</strong> ou <strong>↑</strong> para pular obstáculos!</p>
+        <p>Quando colidir, responda perguntas sobre óptica geométrica para continuar.</p>
+        <p><strong>Temas:</strong> Reflexão, Espelhos Planos e Esféricos</p>
+        <button class="start-btn" onclick="startGame()">Começar Jogo</button>
     </div>
 
-    <div class="game-over" id="gameOver">
-        <div class="game-over-content">
-            <h2>🎮 Fim de Jogo!</h2>
-            <p>Pontuação Final: <span id="finalScore">0</span></p>
-            <p>Total de Acertos: <span id="finalCorrect">0</span></p>
-            <button class="restart-btn" onclick="restartGame()">Jogar Novamente</button>
-        </div>
+    <div class="game-area">
+        <div class="lane-divider"></div>
+        <div class="lane-divider"></div>
+        <div class="lane-divider"></div>
+        <div class="dino" id="dino"></div>
+        <div class="ground"></div>
     </div>
+</div>
 
-    <script>
-        let gameRunning = false;
-        let score = 0;
-        let correctAnswers = 0;
-        let dino = document.getElementById('dino');
-        let gameArea = document.querySelector('.game-area');
-        let isJumping = false;
-        let obstacleInterval;
-        let gameSpeed = 2500;
-        let currentLane = 1; // 0 = esquerda, 1 = centro, 2 = direita
-        let lanes = [16.66, 50, 83.33]; // Posições das pistas em %
+<div class="question-modal" id="questionModal">
+    <div class="question-content">
+        <div class="question-title">🔬 Pergunta de Óptica Geométrica</div>
+        <div class="question-text" id="questionText"></div>
+        <div class="options" id="options"></div>
+        <button class="continue-btn" id="continueBtn" onclick="continueGame()">Continuar Jogo</button>
+    </div>
+</div>
 
-        const questions = [
-            {
-                question: "Qual tipo de reflexão ocorre em uma superfície lisa como um espelho?",
-                options: ["Reflexão difusa", "Reflexão especular", "Reflexão total", "Reflexão parcial"],
-                correct: 1
-            },
-            {
-                question: "Em um espelho plano, a imagem formada é:",
-                options: ["Real e invertida", "Virtual e do mesmo tamanho", "Real e ampliada", "Virtual e reduzida"],
-                correct: 1
-            },
-            {
-                question: "Qual é a principal característica da reflexão difusa?",
-                options: ["Ocorre apenas em espelhos", "A luz é espalhada em várias direções", "Forma imagens nítidas", "Só acontece com luz laser"],
-                correct: 1
-            },
-            {
-                question: "Em um espelho côncavo, quando o objeto está no foco:",
-                options: ["A imagem é virtual", "A imagem é real e invertida", "Os raios emergem paralelos", "Não se forma imagem"],
-                correct: 2
-            },
-            {
-                question: "A distância focal de um espelho esférico é:",
-                options: ["Igual ao raio de curvatura", "Metade do raio de curvatura", "Duas vezes o raio", "Independente do raio"],
-                correct: 1
-            },
-            {
-                question: "Em um espelho convexo, as imagens são sempre:",
-                options: ["Reais e ampliadas", "Virtuais e reduzidas", "Reais e reduzidas", "Virtuais e ampliadas"],
-                correct: 1
-            },
-            {
-                question: "O que acontece quando a luz incide perpendicularmente em um espelho?",
-                options: ["É totalmente absorvida", "Reflete no mesmo ângulo", "É refratada", "Volta na mesma direção"],
-                correct: 3
-            },
-            {
-                question: "Qual espelho é usado em retrovisores de carros?",
-                options: ["Espelho plano", "Espelho côncavo", "Espelho convexo", "Espelho cilíndrico"],
-                correct: 2
-            }
-        ];
-
-        function startGame() {
-            document.getElementById('instructions').style.display = 'none';
-            gameRunning = true;
-            score = 0;
-            correctAnswers = 0;
-            updateScore();
-            createObstacles();
-        }
-
-        function createObstacles() {
-            if (!gameRunning) return;
-            
-            const obstacle = document.createElement('div');
-            obstacle.className = 'obstacle';
-            obstacle.style.right = '-80px';
-            
-            // Escolher pista aleatória
-            const randomLane = Math.floor(Math.random() * 3);
-            obstacle.style.left = lanes[randomLane] + '%';
-            obstacle.style.transform = 'translateX(-50%)';
-            obstacle.dataset.lane = randomLane;
-            
-            gameArea.appendChild(obstacle);
-
-            // Verificar colisão
-            const checkCollision = setInterval(() => {
-                const dinoRect = dino.getBoundingClientRect();
-                const obstacleRect = obstacle.getBoundingClientRect();
-                const obstacleLane = parseInt(obstacle.dataset.lane);
-
-                if (currentLane === obstacleLane &&
-                    obstacleRect.right > dinoRect.left && 
-                    obstacleRect.left < dinoRect.right && 
-                    obstacleRect.bottom > dinoRect.top && 
-                    obstacleRect.top < dinoRect.bottom) {
-                    
-                    clearInterval(checkCollision);
-                    obstacle.remove();
-                    showQuestion();
-                    return;
-                }
-
-                if (obstacleRect.right < 0) {
-                   
-
+<div class="game-over" id="gameOver">
+    <div class="game-over-content">
+        <h2>🎮 Fim de Jogo!</h2>
+        <p>Pontuação Final: <span id="finalScore">0</span></p>
+        <p>Total de Acertos: <span id="finalCorrect">0</span></p>
+        <button class="restart-btn" onclick="restartGame()">Jogar Novamente</button>
+    </div>
+</div>
