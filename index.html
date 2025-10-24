@@ -174,6 +174,12 @@ let scoreInterval;
 let obstacleInterval;
 let gameRunning = false;
 
+// variáveis do pulo
+let jumpVelocity = 0;
+let gravity = 0.8;
+let dinoY = 100;
+let isOnGround = true;
+
 const questions = [
 {question:"Qual tipo de reflexão ocorre em uma superfície lisa como um espelho?",options:["Reflexão difusa","Reflexão especular","Reflexão total","Reflexão parcial"],correct:1},
 {question:"Em um espelho plano, a imagem formada é:",options:["Real e invertida","Virtual e do mesmo tamanho","Real e ampliada","Virtual e reduzida"],correct:1},
@@ -203,6 +209,9 @@ function startGame(){
     obstacles.forEach(o => o.remove());
     obstacles = [];
     gameRunning = true;
+    dinoY = 100;
+    isOnGround = true;
+    jumping = false;
     document.getElementById('score').textContent = score;
     scoreInterval = setInterval(()=>{
         score++;
@@ -222,48 +231,45 @@ function spawnObstacle(){
 }
 
 function gameLoop(){
-  if(!gameRunning) return;
+    if(!gameRunning) return;
 
-  // física do pulo (corrigida)
-  if (!isOnGround) {
-      dinoY += jumpVelocity;
-      jumpVelocity -= gravity; // gravidade puxa pra baixo
+    // física do pulo corrigida
+    if (!isOnGround) {
+        dinoY += jumpVelocity;
+        jumpVelocity -= gravity;
 
-      // altura máxima do pulo
-      if (dinoY >= 250) {
-          jumpVelocity = -Math.abs(jumpVelocity); // começa a descer
-      }
+        if (dinoY >= 250) {
+            jumpVelocity = -jumpVelocity;
+        }
 
-      // quando toca o chão
-      if (dinoY <= 100) {
-          dinoY = 100;
-          isOnGround = true;
-          jumping = false;
-          jumpVelocity = 0;
-      }
-  }
-  dino.style.bottom = dinoY + "px";
+        if (dinoY <= 100) {
+            dinoY = 100;
+            isOnGround = true;
+            jumping = false;
+            jumpVelocity = 0;
+        }
+    }
+    dino.style.bottom = dinoY + "px";
 
-  // movimenta obstáculos
-  obstacles.forEach((obs,index)=>{
-      let pos = parseInt(obs.style.left);
-      pos -= gameSpeed;
-      obs.style.left = pos+'px';
-      if(pos + obs.offsetWidth < 0){
-          obs.remove();
-          obstacles.splice(index,1);
-      }
-      if(collision(dino, obs)){
-          pauseGame();
-          showQuestion();
-          obs.remove();
-          obstacles.splice(index,1);
-      }
-  });
+    // movimento e colisão dos obstáculos
+    obstacles.forEach((obs,index)=>{
+        let pos = parseInt(obs.style.left);
+        pos -= gameSpeed;
+        obs.style.left = pos+'px';
+        if(pos + obs.offsetWidth < 0){
+            obs.remove();
+            obstacles.splice(index,1);
+        }
+        if(collision(dino, obs)){
+            pauseGame();
+            showQuestion();
+            obs.remove();
+            obstacles.splice(index,1);
+        }
+    });
 
-  requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
 }
-
 
 function collision(a,b){
     const r1 = a.getBoundingClientRect();
@@ -271,16 +277,11 @@ function collision(a,b){
     return !(r1.top>r2.bottom || r1.bottom<r2.top || r1.right<r2.left || r1.left>r2.right);
 }
 
-let jumpVelocity = 0;
-let gravity = 0.8;
-let dinoY = 100; // altura inicial (chão)
-let isOnGround = true;
-
-function jump(){
-  if(jumping || !gameRunning) return;
-  jumping = true;
-  isOnGround = false;
-  jumpVelocity = 12; // força do pulo (ajuste se quiser mais alto)
+function jump() {
+    if (jumping || !gameRunning || !isOnGround) return;
+    jumping = true;
+    isOnGround = false;
+    jumpVelocity = 15;
 }
 
 function duck(){
@@ -290,7 +291,12 @@ function duck(){
     setTimeout(()=>{ dino.classList.remove('ducking'); ducking=false; },400);
 }
 
-document.addEventListener('keydown', e=>{
+// Bloqueia pulo/abaixar enquanto o modal está aberto
+document.addEventListener('keydown', e => {
+    const questionModal = document.getElementById('questionModal');
+    const isModalOpen = questionModal.style.display === 'flex';
+    if (isModalOpen) return;
+
     if(e.code==='Space'||e.code==='ArrowUp') jump();
     if(e.code==='ArrowDown') duck();
 });
@@ -334,9 +340,9 @@ function selectAnswer(selected,correct){
         if(i===correct) b.classList.add('correct');
         else if(i===selected) b.classList.add('incorrect');
     });
+    const btnContinue = document.getElementById('continueBtn');
     if(selected===correct){
         score += 50;
-        const btnContinue = document.getElementById('continueBtn');
         btnContinue.style.display='block';
         btnContinue.onclick = ()=>{
             document.getElementById('questionModal').style.display='none';
@@ -346,10 +352,12 @@ function selectAnswer(selected,correct){
     } else {
         alert("Resposta incorreta! O jogo reiniciará.");
         document.getElementById('questionModal').style.display='none';
-        startGame(); // reinicia o jogo
+        btnContinue.style.display='none';
+        startGame();
     }
 }
 </script>
+
 
 </body>
 </html>
