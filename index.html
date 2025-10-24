@@ -222,6 +222,16 @@ function spawnObstacle(){
 }
 
 function gameLoop(){
+    if(!isOnGround){
+    jumpVelocity -= gravity;
+    dinoY += jumpVelocity;
+    if(dinoY <= 100){
+        dinoY = 100;
+        isOnGround = true;
+        jumping = false;
+    }
+}
+dino.style.bottom = dinoY + "px";
     if(!gameRunning) return;
     obstacles.forEach((obs,index)=>{
         let pos = parseInt(obs.style.left);
@@ -247,11 +257,16 @@ function collision(a,b){
     return !(r1.top>r2.bottom || r1.bottom<r2.top || r1.right<r2.left || r1.left>r2.right);
 }
 
+let jumpVelocity = 0;
+let gravity = 0.8;
+let dinoY = 100; // posição base
+let isOnGround = true;
+
 function jump(){
     if(jumping || !gameRunning) return;
-    jumping=true;
-    dino.classList.add('jumping');
-    setTimeout(()=>{ dino.classList.remove('jumping'); jumping=false; },400);
+    jumping = true;
+    isOnGround = false;
+    jumpVelocity = 15; // força do pulo
 }
 
 function duck(){
