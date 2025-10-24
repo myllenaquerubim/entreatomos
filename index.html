@@ -173,11 +173,6 @@ let ducking = false;
 let scoreInterval;
 let obstacleInterval;
 let gameRunning = false;
-// variáveis do pulo
-let jumpVelocity = 0;
-let gravity = 0.8;
-let dinoY = 100; // altura inicial (chão)
-let isOnGround = true;
 
 const questions = [
 {question:"Qual tipo de reflexão ocorre em uma superfície lisa como um espelho?",options:["Reflexão difusa","Reflexão especular","Reflexão total","Reflexão parcial"],correct:1},
@@ -278,7 +273,7 @@ function collision(a,b){
 
 let jumpVelocity = 0;
 let gravity = 0.8;
-let dinoY = 100; // posição base
+let dinoY = 100; // altura inicial (chão)
 let isOnGround = true;
 
 function jump(){
