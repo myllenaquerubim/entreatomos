@@ -173,6 +173,11 @@ let ducking = false;
 let scoreInterval;
 let obstacleInterval;
 let gameRunning = false;
+// variáveis do pulo
+let jumpVelocity = 0;
+let gravity = 0.8;
+let dinoY = 100; // altura inicial (chão)
+let isOnGround = true;
 
 const questions = [
 {question:"Qual tipo de reflexão ocorre em uma superfície lisa como um espelho?",options:["Reflexão difusa","Reflexão especular","Reflexão total","Reflexão parcial"],correct:1},
@@ -222,34 +227,48 @@ function spawnObstacle(){
 }
 
 function gameLoop(){
-    if(!isOnGround){
-    jumpVelocity -= gravity;
-    dinoY += jumpVelocity;
-    if(dinoY <= 100){
-        dinoY = 100;
-        isOnGround = true;
-        jumping = false;
-    }
+  if(!gameRunning) return;
+
+  // física do pulo (corrigida)
+  if (!isOnGround) {
+      dinoY += jumpVelocity;
+      jumpVelocity -= gravity; // gravidade puxa pra baixo
+
+      // altura máxima do pulo
+      if (dinoY >= 250) {
+          jumpVelocity = -Math.abs(jumpVelocity); // começa a descer
+      }
+
+      // quando toca o chão
+      if (dinoY <= 100) {
+          dinoY = 100;
+          isOnGround = true;
+          jumping = false;
+          jumpVelocity = 0;
+      }
+  }
+  dino.style.bottom = dinoY + "px";
+
+  // movimenta obstáculos
+  obstacles.forEach((obs,index)=>{
+      let pos = parseInt(obs.style.left);
+      pos -= gameSpeed;
+      obs.style.left = pos+'px';
+      if(pos + obs.offsetWidth < 0){
+          obs.remove();
+          obstacles.splice(index,1);
+      }
+      if(collision(dino, obs)){
+          pauseGame();
+          showQuestion();
+          obs.remove();
+          obstacles.splice(index,1);
+      }
+  });
+
+  requestAnimationFrame(gameLoop);
 }
-dino.style.bottom = dinoY + "px";
-    if(!gameRunning) return;
-    obstacles.forEach((obs,index)=>{
-        let pos = parseInt(obs.style.left);
-        pos -= gameSpeed;
-        obs.style.left = pos+'px';
-        if(pos + obs.offsetWidth < 0){
-            obs.remove();
-            obstacles.splice(index,1);
-        }
-        if(collision(dino, obs)){
-            pauseGame();
-            showQuestion();
-            obs.remove();
-            obstacles.splice(index,1);
-        }
-    });
-    requestAnimationFrame(gameLoop);
-}
+
 
 function collision(a,b){
     const r1 = a.getBoundingClientRect();
@@ -263,10 +282,10 @@ let dinoY = 100; // posição base
 let isOnGround = true;
 
 function jump(){
-    if(jumping || !gameRunning) return;
-    jumping = true;
-    isOnGround = false;
-    jumpVelocity = 15; // força do pulo
+  if(jumping || !gameRunning) return;
+  jumping = true;
+  isOnGround = false;
+  jumpVelocity = 12; // força do pulo (ajuste se quiser mais alto)
 }
 
 function duck(){
